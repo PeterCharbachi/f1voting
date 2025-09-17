@@ -1,0 +1,63 @@
+@import "tailwindcss";
+/* Import Google Fonts - Titillium Web for a sporty look */
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
+
+@theme {
+  /* F1 Website Inspired Color Palette (WCAG Contrast Enhanced) */
+  --color-primary: #E10600; /* F1 Red */
+  --color-secondary: #6B7280; /* Muted gray */
+  --color-accent: #00F0FF; /* A bright cyan for highlights, if needed */
+
+  --color-background-dark: #15151E; /* Very dark background, almost black */
+  --color-background-medium: #1E1E28; /* Slightly lighter for cards/sections */
+  --color-background-light: #2A2A36; /* Lighter gray for borders/dividers */
+
+  --color-text-light: #FFFFFF; /* Pure white for main text */
+  --color-text-muted: #C0C0C0; /* Lightened for better contrast (WCAG) */
+  --color-text-dark: #000000; /* Black text (if ever needed on light backgrounds) */
+
+  /* Existing F1-specific colors (ensure contrast if used for text) */
+  --color-gold: #FFD700;
+  --color-silver: #C0C0C0;
+  --color-bronze: #CD7F32;
+
+  /* Grays for components, etc. (aligned with new background/text grays) */
+  --color-gray-900: #15151E; /* Matches background-dark */
+  --color-gray-800: #1E1E28; /* Matches background-medium */
+  --color-gray-700: #2A2A36; /* Matches background-light */
+  --color-gray-600: #4B4B5A; /* Slightly lighter for subtle elements */
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background-dark text-text-light font-sans antialiased;
+    font-family: 'Titillium Web', sans-serif;
+
+    /* F1 Background Image */
+    background-image: url('https://images.unsplash.com/photo-1678732057617-3bcaf62af9ce?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  /* Overlay for text readability */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); 
+    z-index: -1;
+  }
+
+  a {
+    @apply text-primary hover:text-primary/80 transition-colors duration-200;
+  }
+}

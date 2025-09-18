@@ -1,5 +1,5 @@
 import { db, auth, app, firebaseConfig } from '../firebase.js';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 // --- Default mock users ---

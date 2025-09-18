@@ -13,20 +13,6 @@ interface Driver {
   name: string;
 }
 
-interface Race {
-  id: string;
-  name: string;
-  date: string;
-  result: string[] | null;
-  year: number; // Added year property
-}
-
-interface Vote {
-  userId: string;
-  raceId: string;
-  prediction: string[];
-}
-
 interface User {
   uid: string;
   email: string;
@@ -65,7 +51,7 @@ export default function Scoreboard() {
   const [allAppUsers, setAllAppUsers] = useState<User[]>([]); 
   const [selectedUsersForComparison, setSelectedUsersForComparison] = useState<string[]>([]); // Stores UIDs
   const { currentUser: user } = useAuth();
-  const { races, drivers, userVotes, predictions, loading, currentSeason, setCurrentSeason } = useData(); // Destructure currentSeason and setCurrentSeason
+  const { races, drivers, userVotes, predictions, currentSeason, setCurrentSeason } = useData(); // Destructure currentSeason and setCurrentSeason
 
   
 
@@ -203,7 +189,7 @@ export default function Scoreboard() {
           <label htmlFor="race-select" className="text-text-muted">Select Race:</label>
           <Select
             id="race-select"
-            value={selectedRaceId || ''}
+            value={selectedRaceId ?? ''}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedRaceId(e.target.value)}
             className="w-full max-w-xs"
           >
@@ -270,7 +256,7 @@ export default function Scoreboard() {
       <div className="p-4 space-y-4">
         <h3 className="text-xl font-bold text-text-light uppercase">Points per Race</h3> 
         {chartData.length > 0 ? (
-          <UserPointsChart data={chartData} userKeys={[{ key: 'points', name: user.email, color: '#E10600' }]} /> 
+          <UserPointsChart data={chartData} userKeys={[{ key: 'points', name: user.email || '', color: '#E10600' }]} /> 
         ) : (
           <p className="text-center text-text-muted py-8">No finished races with votes to display stats for {currentSeason}.</p>
         )}
@@ -333,7 +319,7 @@ export default function Scoreboard() {
           <label htmlFor="scoreboard-season-select" className="text-text-muted mr-2">Select Season:</label>
           <Select
             id="scoreboard-season-select"
-            value={currentSeason}
+            value={String(currentSeason)}
             onChange={handleSeasonChange}
             className="w-32"
           >

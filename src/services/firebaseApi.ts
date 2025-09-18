@@ -14,6 +14,8 @@ import {
   deleteDoc,
   query,
   where,
+  Query,
+  type DocumentData
 } from 'firebase/firestore';
 
 // Helper to convert Firebase user to our app's user format
@@ -113,7 +115,7 @@ export const submitVote = async (userId: string, raceId: string, prediction: str
 
 export const getVotes = async (userId?: string) => {
   try {
-    let votesQuery = collection(db, 'votes');
+    let votesQuery: Query<DocumentData> = collection(db, 'votes');
     if (userId) {
       votesQuery = query(votesQuery, where('userId', '==', userId));
     }

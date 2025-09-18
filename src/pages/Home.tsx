@@ -42,7 +42,7 @@ export default function Home() {
             <label htmlFor="season-select" className="text-text-muted">Select Season:</label>
             <Select
               id="season-select"
-              value={currentSeason}
+              value={String(currentSeason)}
               onChange={handleSeasonChange}
               className="w-32"
             >

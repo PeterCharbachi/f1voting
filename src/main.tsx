@@ -10,9 +10,7 @@ import Admin from './pages/Admin.tsx';
 import Info from './pages/Info.tsx'; // Import Info component
 import { AuthProvider } from './context/AuthContext.tsx';
 import { DataProvider } from './context/DataContext.tsx';
-import ProtectedRoute from './components/auth/ProtectedRoute.tsx';
 import AdminRoute from './components/auth/AdminRoute.tsx';
-import RedirectIfAuth from './components/auth/RedirectIfAuth.tsx';
 
 const router = createBrowserRouter([
   {

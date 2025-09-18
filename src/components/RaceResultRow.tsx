@@ -5,7 +5,25 @@ import { Button } from './ui/Button';
 
 import Select from './ui/Select';
 
-export default function RaceResultRow({ race, drivers }) {
+interface Race {
+  id: string;
+  name: string;
+  date: string;
+  result: string[] | null;
+  year: number;
+}
+
+interface Driver {
+  id: string;
+  name: string;
+}
+
+interface RaceResultRowProps {
+  race: Race;
+  drivers: Driver[];
+}
+
+export default function RaceResultRow({ race, drivers }: RaceResultRowProps) {
   const { updateRaceResult } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [p1, setP1] = useState(race.result ? race.result[0] : '');
@@ -33,19 +51,19 @@ export default function RaceResultRow({ race, drivers }) {
       <Td className="font-semibold">{race.name}</Td>
       <Td className="text-gray-400">{race.date}</Td>
       {isEditing ? (
-        <Td colSpan={2}> 
+        <Td colSpan={2} className="">
           <div className="flex items-center gap-2">
             <Select value={p1} onChange={e => setP1(e.target.value)} required>
                 <option value="" disabled>1st Place</option>
-                {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {drivers.map((d: Driver) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </Select>
             <Select value={p2} onChange={e => setP2(e.target.value)} required>
                 <option value="" disabled>2nd Place</option>
-                {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {drivers.map((d: Driver) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </Select>
             <Select value={p3} onChange={e => setP3(e.target.value)} required>
                 <option value="" disabled>3rd Place</option>
-                {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {drivers.map((d: Driver) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </Select>
             <Button onClick={handleSave} className="w-auto text-sm py-2">Save</Button>
             <Button onClick={handleCancel} variant="secondary" className="w-auto text-sm py-2">Cancel</Button>
@@ -53,12 +71,12 @@ export default function RaceResultRow({ race, drivers }) {
         </Td>
       ) : (
         <>
-          <Td>
+          <Td className="">
             {race.result ? (
                 <div className="space-y-1 text-sm">
-                    <p>1st: {drivers.find(d => d.id === race.result[0])?.name}</p>
-                    <p>2nd: {drivers.find(d => d.id === race.result[1])?.name}</p>
-                    <p>3rd: {drivers.find(d => d.id === race.result[2])?.name}</p>
+                    <p>1st: {drivers.find((d: Driver) => d.id === race.result![0])?.name}</p>
+                    <p>2nd: {drivers.find((d: Driver) => d.id === race.result![1])?.name}</p>
+                    <p>3rd: {drivers.find((d: Driver) => d.id === race.result![2])?.name}</p>
                 </div>
             ) : <span className="text-gray-500">Not set</span>}
           </Td>

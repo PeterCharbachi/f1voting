@@ -17,11 +17,7 @@ interface Race {
   result: string[] | null;
 }
 
-interface Vote {
-  userId: string;
-  raceId: string;
-  prediction: string[];
-}
+
 
 interface RaceCardProps {
   race: Race;

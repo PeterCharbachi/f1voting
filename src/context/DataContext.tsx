@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode, useMemo } from 'react';
 import { db } from '../firebase.ts';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { useAuth } from './AuthContext'; // Import useAuth
 
 interface User {
@@ -54,7 +54,8 @@ interface DataContextType {
   addRace: (race: Omit<Race, 'id'>) => Promise<void>;
   updateRace: (raceId: string, updates: Partial<Race>) => Promise<void>;
   deleteRace: (raceId: string) => Promise<void>;
-  submitVote: (raceId: string, prediction: string[]) => Promise<void>; // Add submitVote
+  submitVote: (raceId: string, prediction: string[]) => Promise<void>;
+  updateRaceResult: (raceId: string, result: string[]) => Promise<void>; // Add this line
   addDriver: (driver: Omit<Driver, 'id'>) => Promise<void>;
   updateDriver: (driverId: string, updates: Partial<Driver>) => Promise<void>;
   deleteDriver: (driverId: string) => Promise<void>;
@@ -185,10 +186,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setConstructors(prev => prev.filter(c => c.id !== constructorId));
   };
 
+  const updateRaceResult = async (raceId: string, result: string[]) => {
+    const raceRef = doc(db, 'races', raceId);
+    await updateDoc(raceRef, { result });
+    setRaces(prev => prev.map(r => r.id === raceId ? { ...r, result } : r));
+  };
 
   const value = useMemo(() => ({
     users, races, predictions, drivers, constructors, userVotes, loading, currentSeason,
-    setCurrentSeason, updateUser, addRace, updateRace, deleteRace, submitVote,
+    setCurrentSeason, updateUser, addRace, updateRace, deleteRace, submitVote, updateRaceResult,
     addDriver, updateDriver, deleteDriver, addConstructor, updateConstructor, deleteConstructor
   }), [users, races, predictions, drivers, constructors, userVotes, loading, currentSeason]);
 

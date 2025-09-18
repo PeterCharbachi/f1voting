@@ -11,11 +11,7 @@ interface User {
   role: 'user' | 'admin';
 }
 
-interface Vote {
-  userId: string;
-  raceId: string;
-  prediction: string[];
-}
+
 
 export default function AdminVoteManagement() {
   const { races, drivers, predictions } = useData();

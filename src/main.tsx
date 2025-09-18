@@ -11,20 +11,27 @@ import Info from './pages/Info.tsx'; // Import Info component
 import { AuthProvider } from './context/AuthContext.tsx';
 import { DataProvider } from './context/DataContext.tsx';
 import AdminRoute from './components/auth/AdminRoute.tsx';
+import ProtectedRoute from './components/auth/ProtectedRoute.tsx';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <ProtectedRoute />,
     children: [
-      { index: true, element: <Navigate to="/home" replace /> },
-      { path: 'home', element: <Home /> },
-      { path: 'scoreboard', element: <Scoreboard /> },
-      { path: 'info', element: <Info /> },
       {
-        path: 'admin',
-        element: <AdminRoute />,
-        children: [{ index: true, element: <Admin /> }],
+        path: '/',
+        element: <App />,
+        children: [
+          { index: true, element: <Navigate to="/home" replace /> },
+          { path: 'home', element: <Home /> },
+          { path: 'scoreboard', element: <Scoreboard /> },
+          { path: 'info', element: <Info /> },
+          {
+            path: 'admin',
+            element: <AdminRoute />,
+            children: [{ index: true, element: <Admin /> }],
+          },
+        ],
       },
     ],
   },

@@ -39,10 +39,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!userDoc.exists()) {
           console.log("AuthProvider: User profile missing in Firestore. Creating default profile...");
           const defaultUsername = user.email ? user.email.split('@')[0] : 'Fan';
+          const isAdminEmail = ['admin@f1voting.com', 'charbachipeter@gmail.com'].includes(user.email || '');
+          
           userData = {
             email: user.email,
             username: defaultUsername,
-            role: 'user'
+            role: isAdminEmail ? 'admin' : 'user'
           };
           await setDoc(userRef, userData);
         }

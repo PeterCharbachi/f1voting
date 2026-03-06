@@ -12,9 +12,17 @@ export const calculatePoints = (vote: { prediction: string[] } | undefined, resu
   if (votePrediction[1] === resultPodium[1]) points += 8;
   if (votePrediction[2] === resultPodium[2]) points += 5;
 
-  // Incorrect position but on podium points
-  votePrediction.forEach((driver, index) => {
-    if (resultPodium.includes(driver) && votePrediction[index] !== resultPodium[index]) {
+  // Pole Position points (index 3)
+  if (votePrediction[3] && resultPodium[3] && votePrediction[3] === resultPodium[3]) {
+    points += 5;
+  }
+
+  // Incorrect position but on podium points (only for indices 0, 1, 2)
+  const votePodium = votePrediction.slice(0, 3);
+  const actualPodium = resultPodium.slice(0, 3);
+
+  votePodium.forEach((driver, index) => {
+    if (actualPodium.includes(driver) && votePodium[index] !== actualPodium[index]) {
       points += 3;
     }
   });

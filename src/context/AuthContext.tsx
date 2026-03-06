@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 interface AppUser {
   uid: string;
   email: string | null;
+  username: string;
   role: 'user' | 'admin';
 }
 
@@ -13,7 +14,7 @@ interface AuthContextType {
   currentUser: AppUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, username: string) => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean; // Added
 }
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCurrentUser({
           uid: user.uid,
           email: user.email,
+          username: userData?.username || '',
           role: (userData?.role as 'user' | 'admin') || 'user',
         });
       } else {
@@ -62,6 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCurrentUser({
       uid: user.uid,
       email: user.email,
+      username: userData?.username || '',
       role: (userData?.role as 'user' | 'admin') || 'user',
     });
     console.log("Login: setCurrentUser successful.");
@@ -72,16 +75,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCurrentUser(null); // Clear user on logout
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, username: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
+      username: username,
       role: 'user', // Default role for new users
     });
     setCurrentUser({
       uid: user.uid,
       email: user.email,
+      username: username,
       role: 'user',
     });
   };

@@ -75,7 +75,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [constructors, setConstructors] = useState<Constructor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentSeason, setCurrentSeason] = useState(new Date().getFullYear());
+  const [currentSeason, setCurrentSeason] = useState(2026);
 
   useEffect(() => {
     const fetchData = async () => {

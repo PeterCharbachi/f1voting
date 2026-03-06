@@ -26,7 +26,7 @@ export default function Home() {
       <section className="relative bg-background-medium/70 backdrop-blur-md py-20 md:py-32 text-center overflow-hidden rounded-lg border border-background-light mx-4">
         <div className="relative z-10 container mx-auto px-4">
           <h1 className="text-5xl md:text-7xl font-extrabold text-white uppercase leading-tight mb-4">
-            Welcome, <span className="text-primary">{user?.email || 'Fan'}</span>!
+            Welcome, <span className="text-primary">{user?.username || 'Fan'}</span>!
           </h1>
           <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto">
             The <span className="text-primary">{currentSeason} Formula 1 season</span> is here. Place your predictions and compete for glory!
@@ -46,9 +46,7 @@ export default function Home() {
               onChange={handleSeasonChange}
               className="w-32"
             >
-              <option value={2026}>2026 (Future)</option>
-              <option value={2025}>2025 (Main)</option>
-              <option value={2024}>2024 (Previous)</option>
+              <option value={2026}>2026 (Active)</option>
             </Select>
           </div>
         </div>

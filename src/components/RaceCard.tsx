@@ -33,6 +33,7 @@ const PodiumDisplay = ({ podium, drivers, title }: { podium: string[], drivers: 
             <p className="flex items-center"><span className="w-20 font-bold text-gold">1st:</span> <span className="text-text-light">{drivers.find(d => d.id === podium[0])?.name || 'N/A'}</span></p>
             <p className="flex items-center"><span className="w-20 font-bold text-silver">2nd:</span> <span className="text-text-light">{drivers.find(d => d.id === podium[1])?.name || 'N/A'}</span></p>
             <p className="flex items-center"><span className="w-20 font-bold text-bronze">3rd:</span> <span className="text-text-light">{drivers.find(d => d.id === podium[2])?.name || 'N/A'}</span></p>
+            <p className="flex items-center"><span className="w-20 font-bold text-primary">Pole:</span> <span className="text-text-light">{drivers.find(d => d.id === podium[3])?.name || 'N/A'}</span></p>
         </div>
     </div>
 );
@@ -43,6 +44,7 @@ export default function RaceCard({ race, drivers }: RaceCardProps) {
   const [p1, setP1] = useState('');
   const [p2, setP2] = useState('');
   const [p3, setP3] = useState('');
+  const [pole, setPole] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -55,10 +57,12 @@ export default function RaceCard({ race, drivers }: RaceCardProps) {
       setP1(existingVote.prediction[0] || '');
       setP2(existingVote.prediction[1] || '');
       setP3(existingVote.prediction[2] || '');
+      setPole(existingVote.prediction[3] || '');
     } else {
       setP1('');
       setP2('');
       setP3('');
+      setPole('');
     }
   }, [existingVote]);
 
@@ -69,18 +73,18 @@ export default function RaceCard({ race, drivers }: RaceCardProps) {
       setSubmitError('You must be logged in to submit a vote.');
       return;
     }
-    if (!p1 || !p2 || !p3) {
-      setSubmitError('Please select all three podium positions.');
+    if (!p1 || !p2 || !p3 || !pole) {
+      setSubmitError('Please select all podium positions and Pole Position.');
       return;
     }
     if (new Set([p1, p2, p3]).size !== 3) {
-        setSubmitError('Please select three different drivers.');
+        setSubmitError('Podium must consist of three different drivers.');
         return;
     }
 
     setIsSubmitting(true);
     try {
-      await submitVote(race.id, [p1, p2, p3]);
+      await submitVote(race.id, [p1, p2, p3, pole]);
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to submit vote.');
     }
@@ -98,9 +102,9 @@ export default function RaceCard({ race, drivers }: RaceCardProps) {
     }
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
-        {[ {pos: '1st', val: p1, set: setP1}, {pos: '2nd', val: p2, set: setP2}, {pos: '3rd', val: p3, set: setP3} ].map(({pos, val, set}) => (
+        {[ {pos: '1st', val: p1, set: setP1}, {pos: '2nd', val: p2, set: setP2}, {pos: '3rd', val: p3, set: setP3}, {pos: 'Pole', val: pole, set: setPole} ].map(({pos, val, set}) => (
             <div key={pos} className="space-y-1">
-              <label className="text-sm font-medium text-text-muted">{pos} Place</label> 
+              <label className="text-sm font-medium text-text-muted">{pos} {pos === 'Pole' ? 'Position' : 'Place'}</label> 
               <Select value={val} onChange={(e) => set(e.target.value)} required className="w-full">
                 <option value="" disabled>Select a driver...</option>
                 {drivers.map(driver => (

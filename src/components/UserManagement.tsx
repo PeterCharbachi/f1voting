@@ -8,6 +8,7 @@ import { Input } from './ui/Input'; // Import Input component
 interface User {
   uid: string;
   email: string;
+  username?: string;
   role: 'user' | 'admin';
 }
 
@@ -17,6 +18,7 @@ export default function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null); // User currently being edited
   const [editRole, setEditRole] = useState<'user' | 'admin'>('user');
+  const [editUsername, setEditUsername] = useState('');
   const [editPassword, setEditPassword] = useState('');
   const [editPasswordConfirm, setEditPasswordConfirm] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export default function UserManagement() {
   const handleEditClick = (user: User) => {
     setEditingUser(user);
     setEditRole(user.role);
+    setEditUsername(user.username || '');
     setEditPassword(''); // Clear password fields when starting edit
     setEditPasswordConfirm('');
     setEditError(null);
@@ -60,9 +63,12 @@ export default function UserManagement() {
     }
 
     try {
-      const updates: { role?: 'user' | 'admin' } = { role: editRole };
+      const updates: { role?: 'user' | 'admin', username?: string } = { 
+        role: editRole,
+        username: editUsername
+      };
       // Password changes are handled via Firebase Auth directly, not via Firestore user doc update
-      // For now, we only update the role in Firestore.
+      // For now, we only update the role and username in Firestore.
       const response = await updateUser(editingUser.uid, updates);
       if (response.success) {
         setEditingUser(null); // Exit edit mode
@@ -109,6 +115,7 @@ export default function UserManagement() {
       <Table>
         <TableHeader>
             <Th className="w-[150px]">Email</Th>
+            <Th>Username</Th>
             <Th>Role</Th>
             <Th className="text-right">Actions</Th>
         </TableHeader>
@@ -116,6 +123,7 @@ export default function UserManagement() {
           {users.map((user) => (
             <Tr key={user.uid}>
               <Td className="font-medium">{user.email}</Td>
+              <Td>{user.username || <span className="text-gray-500 italic">Not set</span>}</Td>
               <Td>
                 {editingUser?.uid === user.uid ? (
                   <Select
@@ -152,6 +160,16 @@ export default function UserManagement() {
         <div className="mt-8 p-4 bg-gray-800 rounded-lg shadow-lg">
           <h3 className="text-xl font-bold mb-4 text-gray-100">Edit User: {editingUser.email}</h3>
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-400" htmlFor="editUsername">Username</label>
+              <Input
+                id="editUsername"
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                placeholder="Choose a username"
+                className="w-full"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-400" htmlFor="editRole">Role</label>
               <Select

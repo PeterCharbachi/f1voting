@@ -19,11 +19,12 @@ interface User {
   role: 'user' | 'admin';
 }
 
-const PodiumDisplay = ({ podium, drivers }: { podium: string[], drivers: Driver[] }) => (
+const PredictionDisplay = ({ prediction, drivers }: { prediction: string[], drivers: Driver[] }) => (
     <div className="space-y-1 text-sm">
-        <p><span className="font-bold text-gold w-8 inline-block">1st</span> {drivers.find(d => d.id === podium[0])?.name || 'N/A'}</p>
-        <p><span className="font-bold text-silver w-8 inline-block">2nd</span> {drivers.find(d => d.id === podium[1])?.name || 'N/A'}</p>
-        <p><span className="font-bold text-bronze w-8 inline-block">3rd</span> {drivers.find(d => d.id === podium[2])?.name || 'N/A'}</p>
+        <p><span className="font-bold text-gold w-8 inline-block">1st</span> {drivers.find(d => d.id === prediction[0])?.name || 'N/A'}</p>
+        <p><span className="font-bold text-silver w-8 inline-block">2nd</span> {drivers.find(d => d.id === prediction[1])?.name || 'N/A'}</p>
+        <p><span className="font-bold text-bronze w-8 inline-block">3rd</span> {drivers.find(d => d.id === prediction[2])?.name || 'N/A'}</p>
+        <p><span className="font-bold text-primary w-8 inline-block">Pole</span> {drivers.find(d => d.id === prediction[3])?.name || 'N/A'}</p>
     </div>
 );
 
@@ -109,8 +110,8 @@ export default function Scoreboard() {
                     return (
                         <Tr key={race.id}>
                             <Td className="font-semibold">{race.name}</Td>
-                            <Td>{vote ? <PodiumDisplay podium={vote.prediction} drivers={drivers} /> : <span className="text-text-muted">No vote</span>}</Td>
-                            <Td>{race.result ? <PodiumDisplay podium={race.result} drivers={drivers} /> : 'N/A'}</Td>
+                            <Td>{vote ? <PredictionDisplay prediction={vote.prediction} drivers={drivers} /> : <span className="text-text-muted">No vote</span>}</Td>
+                            <Td>{race.result ? <PredictionDisplay prediction={race.result} drivers={drivers} /> : 'N/A'}</Td>
                             <Td className="font-bold text-2xl text-center text-primary">{points}</Td>
                         </Tr>
                     );
@@ -137,7 +138,7 @@ export default function Scoreboard() {
     const leaderboard = Object.entries(userScores)
       .map(([uid, totalPoints]) => {
         const user = allAppUsers.find(u => u.uid === uid);
-        return { uid, email: user?.email || 'Unknown User', totalPoints };
+        return { uid, username: (user as any)?.username || user?.email || 'Unknown User', totalPoints };
       })
       .sort((a, b) => b.totalPoints - a.totalPoints);
 
@@ -152,7 +153,7 @@ export default function Scoreboard() {
                 {leaderboard.length > 0 ? leaderboard.map((entry, index) => (
                     <Tr key={entry.uid}>
                         <Td className="font-bold text-lg text-center">{index + 1}</Td>
-                        <Td className="font-semibold">{entry.email}</Td>
+                        <Td className="font-semibold">{entry.username}</Td>
                         <Td className="font-bold text-2xl text-primary">{entry.totalPoints}</Td>
                     </Tr>
                 )) : (
@@ -206,7 +207,7 @@ export default function Scoreboard() {
               <CardTitle>Actual Result: {selectedRace.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              <PodiumDisplay podium={selectedRace.result} drivers={drivers} />
+              <PredictionDisplay prediction={selectedRace.result} drivers={drivers} />
             </CardContent>
           </Card>
         )}
@@ -223,8 +224,8 @@ export default function Scoreboard() {
               const user = allAppUsers.find(u => u.uid === entry.userId);
               return (
                 <Tr key={entry.userId} className={entry.points === maxPoints && maxPoints > 0 ? 'bg-primary/20' : ''}> 
-                  <Td className="font-semibold">{user?.email || 'Unknown User'} {entry.points === maxPoints && maxPoints > 0 && <span className="text-primary">(Winner)</span>}</Td>
-                  <Td><PodiumDisplay podium={entry.prediction} drivers={drivers} /></Td>
+                  <Td className="font-semibold">{(user as any)?.username || user?.email || 'Unknown User'} {entry.points === maxPoints && maxPoints > 0 && <span className="text-primary">(Winner)</span>}</Td>
+                  <Td><PredictionDisplay prediction={entry.prediction} drivers={drivers} /></Td>
                   <Td className="font-bold text-lg text-center text-primary">{entry.points}</Td>
                 </Tr>
               );
@@ -281,7 +282,7 @@ export default function Scoreboard() {
       const user = allAppUsers.find(u => u.uid === uid);
       return {
         key: `${uid}_points`,
-        name: user?.email || 'Unknown User',
+        name: (user as any)?.username || user?.email || 'Unknown User',
         color: colors[index],
       };
     });
@@ -298,7 +299,7 @@ export default function Scoreboard() {
                 checked={selectedUsersForComparison.includes(appUser.uid)}
                 onChange={(e) => handleUserSelectionForComparison(appUser.uid, e.target.checked)}
               />
-              <span className="ml-2">{appUser.email}</span>
+              <span className="ml-2">{(appUser as any).username || appUser.email}</span>
             </label>
           ))}
         </div>
@@ -323,9 +324,7 @@ export default function Scoreboard() {
             onChange={handleSeasonChange}
             className="w-32"
           >
-            <option value={2026}>2026 (Future)</option>
-            <option value={2025}>2025 (Main)</option>
-            <option value={2024}>2024 (Previous)</option>
+            <option value={2026}>2026 (Active)</option>
           </Select>
         </div>
         <Card>

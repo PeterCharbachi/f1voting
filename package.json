@@ -3,11 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  
-  
-  
-  
-  
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -16,6 +11,7 @@
     "migrate": "tsc --project tsconfig.migrate.json && node dist/scripts/migrateMockData.js"
   },
   "dependencies": {
+    "dotenv": "^17.3.1",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0",
     "react": "^19.1.1",

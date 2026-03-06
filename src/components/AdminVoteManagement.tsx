@@ -21,6 +21,7 @@ export default function AdminVoteManagement() {
   const [p1, setP1] = useState('');
   const [p2, setP2] = useState('');
   const [p3, setP3] = useState('');
+  const [pole, setPole] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,15 +53,18 @@ export default function AdminVoteManagement() {
         setP1(currentVote.prediction[0] || '');
         setP2(currentVote.prediction[1] || '');
         setP3(currentVote.prediction[2] || '');
+        setPole(currentVote.prediction[3] || '');
       } else {
         setP1('');
         setP2('');
         setP3('');
+        setPole('');
       }
     } else {
       setP1('');
       setP2('');
       setP3('');
+      setPole('');
     }
   }, [selectedUser, selectedRace, predictions]);
 
@@ -69,17 +73,17 @@ export default function AdminVoteManagement() {
     setMessage(null);
     setError(null);
 
-    if (!selectedUser || selectedRace === null || !p1 || !p2 || !p3) {
-      setError('Please select a user, a race, and all three podium drivers.');
+    if (!selectedUser || selectedRace === null || !p1 || !p2 || !p3 || !pole) {
+      setError('Please select a user, a race, and all four prediction fields.');
       return;
     }
     if (new Set([p1, p2, p3]).size !== 3) {
-      setError('Please select three different drivers.');
+      setError('Please select three different drivers for the podium.');
       return;
     }
 
     try {
-      const response = await adminUpdateVote(selectedUser, selectedRace, [p1, p2, p3]);
+      const response = await adminUpdateVote(selectedUser, selectedRace, [p1, p2, p3, pole]);
       if (response.success) {
         setMessage('Vote updated successfully!');
         // The DataContext will automatically update, no need to fetchAllVotes
@@ -99,11 +103,12 @@ export default function AdminVoteManagement() {
     return <div className="text-center text-red-500">Error: {error}</div>;
   }
 
-  const PodiumDisplay = ({ podium }: { podium: string[] }) => (
+  const PredictionDisplay = ({ prediction }: { prediction: string[] }) => (
     <div className="space-y-1 text-sm">
-      <p><span className="font-semibold text-gold w-8 inline-block">1st</span> {drivers.find(d => d.id === podium[0])?.name || 'N/A'}</p>
-      <p><span className="font-semibold text-silver w-8 inline-block">2nd</span> {drivers.find(d => d.id === podium[1])?.name || 'N/A'}</p>
-      <p><span className="font-semibold text-bronze w-8 inline-block">3rd</span> {drivers.find(d => d.id === podium[2])?.name || 'N/A'}</p>
+      <p><span className="font-semibold text-gold w-8 inline-block">1st</span> {drivers.find(d => d.id === prediction[0])?.name || 'N/A'}</p>
+      <p><span className="font-semibold text-silver w-8 inline-block">2nd</span> {drivers.find(d => d.id === prediction[1])?.name || 'N/A'}</p>
+      <p><span className="font-semibold text-bronze w-8 inline-block">3rd</span> {drivers.find(d => d.id === prediction[2])?.name || 'N/A'}</p>
+      <p><span className="font-semibold text-primary w-8 inline-block">Pole</span> {drivers.find(d => d.id === prediction[3])?.name || 'N/A'}</p>
     </div>
   );
 
@@ -147,12 +152,12 @@ export default function AdminVoteManagement() {
           {selectedUser && selectedRace !== null && ( // Only show prediction form if user and race are selected
             <>
               <h4 className="font-bold text-lg text-gray-100 mt-4">Current Prediction for {users.find(u => u.uid === selectedUser)?.email} - {races.find(r => r.id === selectedRace)?.name}</h4>
-              <PodiumDisplay podium={[p1, p2, p3]} />
+              <PredictionDisplay prediction={[p1, p2, p3, pole]} />
 
               <div className="space-y-2">
-                {[ {pos: '1st', val: p1, set: setP1}, {pos: '2nd', val: p2, set: setP2}, {pos: '3rd', val: p3, set: setP3} ].map(({pos, val, set}) => (
+                {[ {pos: '1st', val: p1, set: setP1}, {pos: '2nd', val: p2, set: setP2}, {pos: '3rd', val: p3, set: setP3}, {pos: 'Pole', val: pole, set: setPole} ].map(({pos, val, set}) => (
                     <div key={pos} className="space-y-1">
-                      <label className="text-sm font-medium text-gray-400">{pos} Place</label>
+                      <label className="text-sm font-medium text-gray-400">{pos} {pos === 'Pole' ? 'Position' : 'Place'}</label>
                       <Select value={val} onChange={(e) => set(e.target.value)} required className="w-full">
                         <option value="" disabled>Select a driver...</option>
                         {drivers.map(driver => (

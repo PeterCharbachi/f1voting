@@ -24,6 +24,7 @@ const formatUser = (user: any) => {
   return {
     uid: user.uid,
     email: user.email,
+    username: user.username || '',
     role: user.role || 'user', // Default role to 'user' if not specified
   };
 };
@@ -34,28 +35,29 @@ export const login = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Fetch user role from Firestore
+    // Fetch user data from Firestore
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data();
 
-    return { success: true, user: formatUser({ ...user, role: userData?.role }) };
+    return { success: true, user: formatUser({ ...user, ...userData }) };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const register = async (email: string, password: string, role: string = 'user') => {
+export const register = async (email: string, password: string, username: string, role: string = 'user') => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Store user data in Firestore, including role
+    // Store user data in Firestore, including role and username
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
+      username: username,
       role: role,
     });
 
-    return { success: true, user: formatUser({ ...user, role }) };
+    return { success: true, user: formatUser({ ...user, username, role }) };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
@@ -105,7 +107,7 @@ export const deleteUser = async (uid: string) => {
 // --- Vote Functions ---
 export const submitVote = async (userId: string, raceId: string, prediction: string[]) => {
   try {
-    const voteRef = doc(db, 'votes', `${userId}-${raceId}`);
+    const voteRef = doc(db, 'predictions', `${userId}-${raceId}`);
     await setDoc(voteRef, { userId, raceId, prediction }, { merge: true });
     return { success: true, message: 'Vote submitted successfully' };
   } catch (error: any) {
@@ -115,7 +117,7 @@ export const submitVote = async (userId: string, raceId: string, prediction: str
 
 export const getVotes = async (userId?: string) => {
   try {
-    let votesQuery: Query<DocumentData> = collection(db, 'votes');
+    let votesQuery: Query<DocumentData> = collection(db, 'predictions');
     if (userId) {
       votesQuery = query(votesQuery, where('userId', '==', userId));
     }
@@ -129,7 +131,7 @@ export const getVotes = async (userId?: string) => {
 
 export const adminUpdateVote = async (userId: string, raceId: string, newPrediction: string[]) => {
   try {
-    const voteRef = doc(db, 'votes', `${userId}-${raceId}`);
+    const voteRef = doc(db, 'predictions', `${userId}-${raceId}`);
     await updateDoc(voteRef, { prediction: newPrediction });
     return { success: true, message: 'Vote updated successfully by admin.' };
   } catch (error: any) {
@@ -171,7 +173,7 @@ export const updateRaceResultByYear = async (year: number, raceId: string, newRe
 
 export const getRaces = async () => {
   try {
-    const currentYear = new Date().getFullYear();
+    const currentYear = 2026;
     const racesCol = collection(db, 'races');
     const q = query(racesCol, where('year', '==', currentYear));
     const raceSnapshot = await getDocs(q);

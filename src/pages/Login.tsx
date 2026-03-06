@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input';
 
 export default function Login() {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,13 +30,16 @@ export default function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (isRegistering && !username) {
+        setError('Username is required.');
+        return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
     try {
-      await register(email, password);
-      await login(email, password);
+      await register(email, password, username);
       console.log("Login: Attempting to navigate to /home");
       navigate('/home');
     } catch (err: any) {
@@ -64,6 +68,19 @@ export default function Login() {
                 required
               />
             </div>
+            {isRegistering && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-text-muted" htmlFor="username">Username</label>
+                <Input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Choose a username"
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-muted" htmlFor="password">Password</label> {/* Use text-text-muted */}
               <Input

@@ -1,6 +1,8 @@
+import 'dotenv/config';
+
 import { db, auth, app, firebaseConfig } from '../firebase.js';
-import { doc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 // --- Default mock users ---
 const defaultMockUsers = [
@@ -10,64 +12,32 @@ const defaultMockUsers = [
     { email: "user@f1voting.com", password: "user123", role: "user", uid: "userUid" },
 ];
 // --- Default Data ---
-const defaultRaces2024 = [
-    { id: "2024-1", name: "Bahrain Grand Prix", date: "2024-03-02", result: ["VER", "PER", "SAI"], year: 2024 },
-    { id: "2024-2", name: "Saudi Arabian Grand Prix", date: "2024-03-09", result: ["VER", "PER", "LEC"], year: 2024 },
-    { id: "2024-3", name: "Australian Grand Prix", date: "2024-03-24", result: ["SAI", "LEC", "NOR"], year: 2024 },
-    { id: "2024-4", name: "Japanese Grand Prix", date: "2024-04-07", result: ["VER", "PER", "SAI"], year: 2024 },
-    { id: "2024-5", name: "Chinese Grand Prix", date: "2024-04-21", result: ["VER", "NOR", "PER"], year: 2024 },
-    { id: "2024-6", name: "Miami Grand Prix", date: "2024-05-05", result: ["NOR", "VER", "LEC"], year: 2024 },
-    { id: "2024-7", name: "Emilia Romagna Grand Prix", date: "2024-05-19", result: ["VER", "NOR", "LEC"], year: 2024 },
-    { id: "2024-8", name: "Monaco Grand Prix", date: "2024-05-26", result: ["LEC", "PIA", "SAI"], year: 2024 },
-    { id: "2024-9", name: "Canadian Grand Prix", date: "2024-06-09", result: ["VER", "NOR", "RUS"], year: 2024 },
-    { id: "2024-10", name: "Spanish Grand Prix", date: "2024-06-23", result: ["VER", "NOR", "HAM"], year: 2024 },
-    { id: "2024-11", name: "Austrian Grand Prix", date: "2024-06-30", result: ["RUS", "PIA", "HAM"], year: 2024 },
-    { id: "2024-12", name: "British Grand Prix", date: "2024-07-07", result: ["HAM", "VER", "NOR"], year: 2024 },
-    { id: "2024-13", name: "Hungarian Grand Prix", date: "2024-07-21", result: ["PIA", "NOR", "HAM"], year: 2024 },
-    { id: "2024-14", name: "Belgian Grand Prix", date: "2024-07-28", result: ["VER", "PIA", "LEC"], year: 2024 },
-    { id: "2024-15", name: "Dutch Grand Prix", date: "2024-08-25", result: ["VER", "NOR", "LEC"], year: 2024 },
-    { id: "2024-16", name: "Italian Grand Prix", date: "2024-09-01", result: ["LEC", "PIA", "RUS"], year: 2024 },
-    { id: "2024-17", name: "Azerbaijan Grand Prix", date: "2024-09-15", result: ["RUS", "LEC", "VER"], year: 2024 },
-    { id: "2024-18", name: "Singapore Grand Prix", date: "2024-09-22", result: ["NOR", "LEC", "PIA"], year: 2024 },
-    { id: "2024-19", name: "United States Grand Prix", date: "2024-10-20", result: ["VER", "HAM", "LEC"], year: 2024 },
-    { id: "2024-20", name: "Mexico City Grand Prix", date: "2024-10-27", result: ["PER", "VER", "SAI"], year: 2024 },
-    { id: "2024-21", name: "São Paulo Grand Prix", date: "2024-11-03", result: ["HAM", "RUS", "NOR"], year: 2024 },
-    { id: "2024-22", name: "Las Vegas Grand Prix", date: "2024-11-23", result: ["VER", "LEC", "PIA"], year: 2024 },
-    { id: "2024-23", name: "Qatar Grand Prix", date: "2024-11-01", result: ["NOR", "VER", "RUS"], year: 2024 },
-    { id: "2024-24", name: "Abu Dhabi Grand Prix", date: "2024-12-08", result: ["VER", "LEC", "HAM"], year: 2024 },
-    { id: "2024-25", name: "South African Grand Prix", date: "2024-04-07", result: ["HAM", "VER", "RUS"], year: 2024 },
-    { id: "2024-26", name: "French Grand Prix", date: "2024-07-28", result: ["VER", "LEC", "NOR"], year: 2024 },
-];
-const defaultRaces2025 = [
-    { id: "2025-1", name: "Australian Grand Prix", date: "2025-03-16", result: ["VER", "LEC", "NOR"], year: 2025 },
-    { id: "2025-2", name: "Bahrain Grand Prix", date: "2025-03-23", result: ["HAM", "RUS", "SAI"], year: 2025 },
-    { id: "2025-3", name: "Saudi Arabian Grand Prix", date: "2025-03-30", result: ["VER", "PER", "LEC"], year: 2025 },
-    { id: "2025-4", name: "Chinese Grand Prix", date: "2025-04-13", result: ["SAI", "LEC", "VER"], year: 2025 },
-    { id: "2025-5", name: "Miami Grand Prix", date: "2025-05-04", result: ["NOR", "PIA", "RUS"], year: 2025 },
-    { id: "2025-6", name: "Monaco Grand Prix", date: "2025-05-25", result: null, year: 2025 },
-    { id: "2025-7", name: "Spanish Grand Prix", date: "2025-06-01", result: null, year: 2025 },
-    { id: "2025-8", name: "Canadian Grand Prix", date: "2025-06-15", result: null, year: 2025 },
-    { id: "2025-9", name: "Austrian Grand Prix", date: "2025-06-29", result: null, year: 2025 },
-    { id: "2025-10", name: "British Grand Prix", date: "2025-07-06", result: null, year: 2025 },
-    { id: "2025-11", name: "Belgian Grand Prix", date: "2025-07-27", result: null, year: 2025 },
-    { id: "2025-12", name: "Hungarian Grand Prix", date: "2025-08-03", result: null, year: 2025 },
-    { id: "2025-13", name: "Dutch Grand Prix", date: "2025-08-31", result: null, year: 2025 },
-    { id: "2025-14", name: "Italian Grand Prix", date: "2025-09-07", result: null, year: 2025 },
-    { id: "2025-15", name: "Singapore Grand Prix", date: "2025-09-21", result: null, year: 2025 },
-    { id: "2025-16", name: "Japanese Grand Prix", date: "2025-09-28", result: null, year: 2025 },
-    { id: "2025-17", name: "United States Grand Prix", date: "2025-10-19", result: null, year: 2025 },
-    { id: "2025-18", name: "Mexico City Grand Prix", date: "2025-10-26", result: null, year: 2025 },
-    { id: "2025-19", name: "São Paulo Grand Prix", date: "2025-11-09", result: null, year: 2025 },
-    { id: "2025-20", name: "Las Vegas Grand Prix", date: "2025-11-22", result: null, year: 2025 },
-    { id: "2025-21", name: "Qatar Grand Prix", date: "2025-11-30", result: null, year: 2025 },
-    { id: "2025-22", name: "Abu Dhabi Grand Prix", date: "2025-12-07", result: null, year: 2025 },
-    { id: "2025-23", name: "South African Grand Prix", date: "2025-04-06", result: null, year: 2025 },
-    { id: "2025-24", name: "Azerbaijan Grand Prix", date: "2025-06-08", result: null, year: 2025 },
-];
+
+
 const defaultRaces2026 = [
-    { id: "2026-1", name: "Future Grand Prix 1", date: "2026-03-01", result: null, year: 2026 },
-    { id: "2026-2", name: "Future Grand Prix 2", date: "2026-03-08", result: null, year: 2026 },
-    { id: "2026-3", name: "Future Grand Prix 3", date: "2026-03-15", result: null, year: 2026 },
+    { id: "2026-01", name: "Australian Grand Prix", date: "2026-03-08", result: null, year: 2026 },
+    { id: "2026-02", name: "Chinese Grand Prix", date: "2026-03-15", result: null, year: 2026 },
+    { id: "2026-03", name: "Japanese Grand Prix", date: "2026-03-29", result: null, year: 2026 },
+    { id: "2026-04", name: "Bahrain Grand Prix", date: "2026-04-12", result: null, year: 2026 },
+    { id: "2026-05", name: "Saudi Arabian Grand Prix", date: "2026-04-19", result: null, year: 2026 },
+    { id: "2026-06", name: "Miami Grand Prix", date: "2026-05-03", result: null, year: 2026 },
+    { id: "2026-07", name: "Monaco Grand Prix", date: "2026-06-07", result: null, year: 2026 },
+    { id: "2026-08", name: "Barcelona Grand Prix", date: "2026-06-14", result: null, year: 2026 },
+    { id: "2026-09", name: "Austrian Grand Prix", date: "2026-06-28", result: null, year: 2026 },
+    { id: "2026-10", name: "British Grand Prix", date: "2026-07-05", result: null, year: 2026 },
+    { id: "2026-11", name: "Belgian Grand Prix", date: "2026-07-19", result: null, year: 2026 },
+    { id: "2026-12", name: "Hungarian Grand Prix", date: "2026-07-26", result: null, year: 2026 },
+    { id: "2026-13", name: "Dutch Grand Prix", date: "2026-08-23", result: null, year: 2026 },
+    { id: "2026-14", name: "Italian Grand Prix", date: "2026-09-06", result: null, year: 2026 },
+    { id: "2026-15", name: "Spanish Grand Prix (Madrid)", date: "2026-09-13", result: null, year: 2026 },
+    { id: "2026-16", name: "Azerbaijan Grand Prix", date: "2026-09-26", result: null, year: 2026 },
+    { id: "2026-17", name: "Singapore Grand Prix", date: "2026-10-11", result: null, year: 2026 },
+    { id: "2026-18", name: "United States Grand Prix", date: "2026-10-25", result: null, year: 2026 },
+    { id: "2026-19", name: "Mexico City Grand Prix", date: "2026-11-01", result: null, year: 2026 },
+    { id: "2026-20", name: "São Paulo Grand Prix", date: "2026-11-08", result: null, year: 2026 },
+    { id: "2026-21", name: "Las Vegas Grand Prix", date: "2026-11-21", result: null, year: 2026 },
+    { id: "2026-22", name: "Qatar Grand Prix", date: "2026-11-29", result: null, year: 2026 },
+    { id: "2026-23", name: "Abu Dhabi Grand Prix", date: "2026-12-06", result: null, year: 2026 },
 ];
 const defaultConstructors = [
     { id: "RB", name: "Red Bull Racing" },
@@ -79,54 +49,56 @@ const defaultConstructors = [
     { id: "WIL", name: "Williams" },
     { id: "VCARB", name: "RB" },
     { id: "HAAS", name: "Haas F1 Team" },
-    { id: "SAUB", name: "Sauber" },
+    { id: "AUDI", name: "Audi" },
 ];
 const defaultDrivers = [
     { id: "VER", name: "Max Verstappen" },
-    { id: "PER", name: "Sergio Perez" },
-    { id: "HAM", name: "Lewis Hamilton" },
-    { id: "RUS", name: "George Russell" },
-    { id: "LEC", name: "Charles Leclerc" },
-    { id: "SAI", name: "Carlos Sainz" },
+    { id: "HAD", name: "Isack Hadjar" },
     { id: "NOR", name: "Lando Norris" },
     { id: "PIA", name: "Oscar Piastri" },
+    { id: "HAM", name: "Lewis Hamilton" },
+    { id: "LEC", name: "Charles Leclerc" },
+    { id: "RUS", name: "George Russell" },
+    { id: "ANT", name: "Andrea Kimi Antonelli" },
     { id: "ALO", name: "Fernando Alonso" },
     { id: "STR", name: "Lance Stroll" },
     { id: "GAS", name: "Pierre Gasly" },
     { id: "OCO", name: "Esteban Ocon" },
     { id: "ALB", name: "Alexander Albon" },
-    { id: "SAR", name: "Logan Sargeant" },
-    { id: "RIC", name: "Daniel Ricciardo" },
+    { id: "SAI", name: "Carlos Sainz" },
+    { id: "BEA", name: "Oliver Bearman" },
     { id: "TSU", name: "Yuki Tsunoda" },
-    { id: "BOT", name: "Valtteri Bottas" },
-    { id: "ZHO", name: "Guanyu Zhou" },
-    { id: "MAG", name: "Kevin Magnussen" },
+    { id: "LAW", name: "Liam Lawson" },
     { id: "HUL", name: "Nico Hulkenberg" },
+    { id: "BOR", name: "Gabriel Bortoleto" },
+    { id: "MAL", name: "Maloney Zane" },
 ];
 
-const getRandomPodium = (drivers: { id: string }[]): string[] => {
-  const shuffled = [...drivers].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 3).map(d => d.id);
-};
-
-const allRaces = [...defaultRaces2024, ...defaultRaces2025, ...defaultRaces2026];
-const defaultVotes: { userId: string; raceId: string; prediction: string[]; }[] = [];
-
-for (const user of defaultMockUsers) {
-    for (const race of allRaces) {
-        // For simplicity, let's assume users vote on all races that have results or are in the future
-        if (race.result || new Date(race.date) > new Date()) {
-            defaultVotes.push({
-                userId: user.uid,
-                raceId: race.id,
-                prediction: getRandomPodium(defaultDrivers)
-            });
-        }
-    }
-}
-
 const migrateData = async () => {
+  try {
+    // Sign in as admin user
+    await signInWithEmailAndPassword(auth, 'admin@f1voting.com', 'admin123');
+    console.log('Admin user signed in successfully.');
+  } catch (error) {
+    console.error('Error signing in admin user:', error);
+    return; // Stop migration if admin sign-in fails
+  }
+
   console.log('Starting data migration...');
+
+  // --- Step 0: Cleanup ---
+  console.log('\nStep 0: Cleaning up existing data (predictions, votes, races, drivers)...');
+  const collectionsToClear = ['predictions', 'votes', 'races', 'drivers'];
+  for (const colName of collectionsToClear) {
+    const colRef = collection(db, colName);
+    const snapshot = await getDocs(colRef);
+    console.log(`  - Deleting ${snapshot.size} documents from ${colName}...`);
+    // Iterate and delete sequentially or in small batches to avoid issues
+    for (const docSnapshot of snapshot.docs) {
+      await deleteDoc(docSnapshot.ref);
+    }
+  }
+  console.log('Cleanup complete.');
 
   // --- Verbose Logging ---
   console.log('Firebase Config being used:', firebaseConfig);
@@ -148,10 +120,14 @@ const migrateData = async () => {
       console.log(`  - Success: ${user.email} created with real UID: ${realUid}`);
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
-        console.warn(`  - Warning: Auth user ${user.email} already exists. This can cause UID mismatches if Firestore is not clean. For a clean migration, delete users from Firebase Auth console first.`);
-        // We can't get the UID for an existing user on the client-side without logging them in.
-        // We'll add the mock UID to the map as a fallback, but this is not ideal.
-        uidMap[user.uid] = user.uid;
+        console.warn(`  - Warning: Auth user ${user.email} already exists.`);
+        // If it's the admin we just signed in as, use that UID
+        if (user.email === 'admin@f1voting.com' && auth.currentUser) {
+          uidMap[user.uid] = auth.currentUser.uid;
+          console.log(`  - Using current session UID for admin: ${auth.currentUser.uid}`);
+        } else {
+          uidMap[user.uid] = user.uid;
+        }
       } else {
         console.error(`  - Error creating auth user ${user.email}: ${error.message}`);
       }
@@ -179,32 +155,8 @@ const migrateData = async () => {
   console.log("'users' collection migrated.");
 
 
-  // --- Step 3: Migrate 'predictions' collection ---
-  console.log("\nStep 3: Migrating 'predictions' collection to Firestore...");
-  for (const vote of defaultVotes) {
-      const realUserId = uidMap[vote.userId];
-      if (!realUserId) {
-          console.error(`  - Error: Could not find real UID for mock userId "${vote.userId}" in vote for race ${vote.raceId}. Skipping this vote.`);
-          continue;
-      }
-      try {
-          const voteId = `${realUserId}-${vote.raceId}`;
-          const voteData = {
-              userId: realUserId,
-              raceId: vote.raceId,
-              prediction: vote.prediction,
-          };
-          await setDoc(doc(db, 'predictions', voteId), voteData);
-          // console.log(`  - Success: Migrated vote for race ${vote.raceId} for user ${realUserId}.`); // Optional: uncomment for verbose logging
-      } catch (error: any) {
-          console.error(`  - Error migrating vote for race ${vote.raceId}: ${error.message}`);
-      }
-  }
-  console.log("'predictions' collection migrated.");
-
-
   // --- Step 4: Migrate Races, Drivers, Constructors (no changes needed here) ---
-  const mockRaces = [...defaultRaces2024, ...defaultRaces2025, ...defaultRaces2026];
+  const mockRaces = [...defaultRaces2026];
   console.log('\nStep 4: Migrating races...');
   for (const race of mockRaces) {
     await setDoc(doc(db, 'races', race.id), race);
@@ -222,6 +174,21 @@ const migrateData = async () => {
     await setDoc(doc(db, 'constructors', constructor.id), constructor);
   }
   console.log('Constructors migrated.');
+
+  // --- Step 5: Final Admin Check ---
+  console.log('\nStep 5: Ensuring admin@f1voting.com has correct role...');
+  const adminUser = defaultMockUsers.find(u => u.email === 'admin@f1voting.com');
+  if (adminUser) {
+    const realAdminUid = uidMap[adminUser.uid];
+    if (realAdminUid) {
+      await setDoc(doc(db, 'users', realAdminUid), { 
+        email: adminUser.email, 
+        role: 'admin',
+        username: 'Admin' 
+      }, { merge: true });
+      console.log(`  - Success: Admin role confirmed for ${adminUser.email}`);
+    }
+  }
 
   console.log('\nData migration complete!');
 };

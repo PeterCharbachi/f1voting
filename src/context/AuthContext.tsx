@@ -31,8 +31,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("AuthProvider: onAuthStateChanged fired. User:", user ? user.uid : "null");
       if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
+        const userRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userRef);
+        
+        let userData = userDoc.data();
+        
+        if (!userDoc.exists()) {
+          console.log("AuthProvider: User profile missing in Firestore. Creating default profile...");
+          const defaultUsername = user.email ? user.email.split('@')[0] : 'Fan';
+          userData = {
+            email: user.email,
+            username: defaultUsername,
+            role: 'user'
+          };
+          await setDoc(userRef, userData);
+        }
+
         setCurrentUser({
           uid: user.uid,
           email: user.email,

@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           uid: user.uid,
           email: user.email,
           username: userData?.username || '',
-          role: (userData?.role as 'user' | 'admin') || 'user',
+          role: (['admin@f1voting.com', 'charbachipeter@gmail.com'].includes(user.email || '') ? 'admin' : (userData?.role as 'user' | 'admin')) || 'user',
         });
       } else {
         setCurrentUser(null);

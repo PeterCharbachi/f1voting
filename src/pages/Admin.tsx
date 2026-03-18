@@ -26,18 +26,18 @@ export default function Admin() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Manage Race Results</CardTitle>
+              <CardTitle>Hantera loppresultat</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <p className="text-center py-8 text-text-muted">Loading race data...</p> 
+                <p className="text-center py-8 text-text-muted">Laddar loppdata...</p> 
               ) : (
                 <Table>
                   <TableHeader>
-                    <Th>Race</Th>
-                    <Th>Date</Th>
-                    <Th>Result (1,2,3,P)</Th>
-                    <Th className="text-right">Actions</Th>
+                    <Th>Lopp</Th>
+                    <Th>Datum</Th>
+                    <Th>Resultat (1,2,3,P)</Th>
+                    <Th className="text-right">Åtgärder</Th>
                   </TableHeader>
                   <TableBody>
                     {races.filter(r => r.year === 2026).map(race => (
@@ -64,14 +64,14 @@ export default function Admin() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-bold text-white text-center uppercase tracking-tight">Admin Panel</h1> 
+      <h1 className="text-4xl font-bold text-white text-center uppercase tracking-tight italic">Admin-panel</h1> 
       
-      <div className="flex flex-wrap space-x-2 px-6 border-b border-background-light">
-          <TabButton isActive={activeTab === 'results'} onClick={() => setActiveTab('results')}>Results</TabButton>
-          <TabButton isActive={activeTab === 'races'} onClick={() => setActiveTab('races')}>Races</TabButton>
-          <TabButton isActive={activeTab === 'drivers'} onClick={() => setActiveTab('drivers')}>Drivers</TabButton>
-          <TabButton isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>Users</TabButton>
-          <TabButton isActive={activeTab === 'votes'} onClick={() => setActiveTab('votes')}>User Votes</TabButton>
+      <div className="flex flex-nowrap space-x-2 px-6 border-b border-background-light overflow-x-auto no-scrollbar min-w-max sm:min-w-0">
+          <TabButton isActive={activeTab === 'results'} onClick={() => setActiveTab('results')}>Resultat</TabButton>
+          <TabButton isActive={activeTab === 'races'} onClick={() => setActiveTab('races')}>Lopp</TabButton>
+          <TabButton isActive={activeTab === 'drivers'} onClick={() => setActiveTab('drivers')}>Förare</TabButton>
+          <TabButton isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>Användare</TabButton>
+          <TabButton isActive={activeTab === 'votes'} onClick={() => setActiveTab('votes')}>Tips</TabButton>
       </div>
 
       <div className="mt-4">

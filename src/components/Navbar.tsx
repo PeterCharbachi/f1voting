@@ -8,63 +8,72 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  console.log("Navbar: currentUser", currentUser, "isAuthenticated", isAuthenticated, "loading", loading);
-
   const handleLogout = () => {
     logout();
     setIsMenuOpen(false);
     navigate('/login');
   };
 
-  const linkClasses = "text-text-light hover:text-primary transition duration-200 uppercase font-semibold tracking-wide block py-2 md:inline md:py-0";
-  const activeLinkClasses = "text-primary";
+  const linkClasses = "text-text-muted hover:text-white transition-all duration-300 uppercase font-black italic tracking-widest text-[10px] md:text-xs relative py-1 group";
+  const activeLinkClasses = "text-white !not-italic";
 
   if (loading) {
-    return null; // Render nothing while authentication is loading
+    return null; 
   }
 
   return (
-    <header className="bg-background-dark border-b border-background-light shadow-lg sticky top-0 z-50">
+    <header className="glass-card rounded-none border-x-0 border-t-0 border-b border-white/5 sticky top-0 z-50">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4 md:space-x-8">
-            <NavLink to="/home" className="text-3xl font-extrabold text-white tracking-tight">
-              F1<span className="text-primary">VOTE</span>
+        <div className="flex items-center justify-between h-14">
+          <div className="flex items-center space-x-6 sm:space-x-12">
+            <NavLink to="/home" className="text-xl md:text-2xl font-black italic tracking-tighter text-white group flex items-center">
+              F1<span className="text-primary group-hover:drop-shadow-[0_0_8px_#E10600] transition-all">VOTE</span>
             </NavLink>
+            
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:space-x-8">
+            <div className="hidden md:flex md:space-x-8 items-center">
               {isAuthenticated && (
                 <>
-                  <NavLink to="/home" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Home</NavLink>
-                  <NavLink to="/scoreboard" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Scoreboard</NavLink>
-                  <NavLink to="/info" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Info</NavLink>
-                  {currentUser?.role === 'admin' && (
-                    <NavLink to="/admin" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Admin</NavLink>
-                  )}
+                  {[
+                    { to: '/home', label: 'Hem' },
+                    { to: '/scoreboard', label: 'Poängtavla' },
+                    { to: '/info', label: 'Info' },
+                    ...(currentUser?.role === 'admin' ? [{ to: '/admin', label: 'Admin' }] : [])
+                  ].map((link) => (
+                    <NavLink 
+                      key={link.to}
+                      to={link.to} 
+                      className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}
+                    >
+                      {link.label}
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                    </NavLink>
+                  ))}
                 </>
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          
+          <div className="flex items-center space-x-6">
             {isAuthenticated ? (
               <>
-                <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-xs text-text-muted">Welcome,</span>
-                  <span className="text-sm font-semibold text-text-light">{currentUser?.username || currentUser?.email}</span>
+                <div className="hidden sm:flex flex-col items-end border-r border-white/10 pr-6">
+                  <span className="text-[8px] font-black uppercase text-primary tracking-[0.2em] leading-none mb-1">Status: Active</span>
+                  <span className="text-[10px] font-bold text-text-light uppercase tracking-tighter">{currentUser?.username || currentUser?.email}</span>
                 </div>
-                <Button onClick={handleLogout} variant="secondary" className="hidden md:block w-auto px-4 py-2 text-sm">Logout</Button>
+                <Button onClick={handleLogout} variant="secondary" className="hidden md:block !py-1 !px-3 text-[9px] !italic">Logga ut</Button>
               </>
             ) : (
-              <NavLink to="/login" className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Login</NavLink>
+              <NavLink to="/login" className={linkClasses}>Logga in</NavLink>
             )}
             
             {/* Mobile Menu Button */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden text-text-light focus:outline-none p-2"
-              aria-label="Toggle menu"
+              className="md:hidden text-text-light focus:outline-none p-2 hover:bg-white/5 transition-colors rounded"
+              aria-label="Öppna meny"
             >
-              <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
                 {isMenuOpen ? (
                   <path fillRule="evenodd" clipRule="evenodd" d="M18.278 16.864a1 1 0 01-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 01-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 011.414-1.414l4.829 4.828 4.828-4.828a1 1 0 111.414 1.414l-4.828 4.829 4.828 4.828z" />
                 ) : (
@@ -76,26 +85,34 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Navigation Menu */}
-        {isMenuOpen && isAuthenticated && (
-          <div className="md:hidden pb-4 pt-2 border-t border-background-light animate-in slide-in-from-top duration-300">
-            <div className="flex flex-col space-y-2">
-              <NavLink to="/home" onClick={() => setIsMenuOpen(false)} className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Home</NavLink>
-              <NavLink to="/scoreboard" onClick={() => setIsMenuOpen(false)} className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Scoreboard</NavLink>
-              <NavLink to="/info" onClick={() => setIsMenuOpen(false)} className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Info</NavLink>
-              {currentUser?.role === 'admin' && (
-                <NavLink to="/admin" onClick={() => setIsMenuOpen(false)} className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClasses : ''}`}>Admin</NavLink>
+        {isMenuOpen && (
+          <div className="md:hidden pb-6 pt-4 border-t border-white/5 animate-in slide-in-from-top duration-300">
+            <div className="flex flex-col space-y-4">
+              {isAuthenticated ? (
+                <>
+                  <NavLink to="/home" onClick={() => setIsMenuOpen(false)} className={linkClasses}>Hem</NavLink>
+                  <NavLink to="/scoreboard" onClick={() => setIsMenuOpen(false)} className={linkClasses}>Poängtavla</NavLink>
+                  <NavLink to="/info" onClick={() => setIsMenuOpen(false)} className={linkClasses}>Info</NavLink>
+                  {currentUser?.role === 'admin' && (
+                    <NavLink to="/admin" onClick={() => setIsMenuOpen(false)} className={linkClasses}>Admin</NavLink>
+                  )}
+                  <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase text-primary tracking-[0.2em] mb-1">Användare</span>
+                      <span className="text-[10px] font-bold text-text-light truncate max-w-[150px]">{currentUser?.username || currentUser?.email}</span>
+                    </div>
+                    <Button onClick={handleLogout} variant="secondary" className="!py-1.5 !px-4 text-[10px]">Logga ut</Button>
+                  </div>
+                </>
+              ) : (
+                <NavLink to="/login" onClick={() => setIsMenuOpen(false)} className={linkClasses}>Logga in</NavLink>
               )}
-              <div className="pt-4 border-t border-background-light flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-xs text-text-muted">Logged in as</span>
-                  <span className="text-sm font-semibold text-text-light">{currentUser?.username || currentUser?.email}</span>
-                </div>
-                <Button onClick={handleLogout} variant="secondary" className="w-auto px-4 py-2 text-sm">Logout</Button>
-              </div>
             </div>
           </div>
         )}
       </nav>
+      {/* Decorative red glowing line at the very bottom of navbar */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-primary to-transparent opacity-40 shadow-[0_0_10px_rgba(225,6,0,0.5)]"></div>
     </header>
   );
 }

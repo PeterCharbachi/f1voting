@@ -13,6 +13,8 @@ import { DataProvider } from './context/DataContext.tsx';
 import AdminRoute from './components/auth/AdminRoute.tsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.tsx';
 
+import RedirectIfAuth from './components/auth/RedirectIfAuth.tsx';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -37,7 +39,10 @@ const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <Login />,
+    element: <RedirectIfAuth />,
+    children: [
+      { path: '/login', element: <Login /> }
+    ],
   },
 ]);
 

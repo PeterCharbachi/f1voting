@@ -1,29 +1,35 @@
 export const calculatePoints = (vote: { prediction: string[] } | undefined, result: string[] | null) => {
-  if (!vote || !result) {
+  if (!vote || !result || !vote.prediction) {
     return 0;
   }
 
   let points = 0;
-  const votePrediction = vote.prediction; // Changed from vote.podium
-  const resultPodium = result;
+  const votePrediction = vote.prediction;
+  const resultData = result;
 
-  // Exact position points
-  if (votePrediction[0] === resultPodium[0]) points += 10;
-  if (votePrediction[1] === resultPodium[1]) points += 8;
-  if (votePrediction[2] === resultPodium[2]) points += 5;
+  // 1. Exact position points (P1, P2, P3)
+  // Only award points if the result for that position is actually set (non-empty string)
+  if (resultData[0] && votePrediction[0] === resultData[0]) points += 10;
+  if (resultData[1] && votePrediction[1] === resultData[1]) points += 8;
+  if (resultData[2] && votePrediction[2] === resultData[2]) points += 5;
 
-  // Pole Position points (index 3)
-  if (votePrediction[3] && resultPodium[3] && votePrediction[3] === resultPodium[3]) {
+  // 2. Pole Position points (index 3)
+  if (resultData[3] && votePrediction[3] === resultData[3]) {
     points += 5;
   }
 
-  // Incorrect position but on podium points (only for indices 0, 1, 2)
-  const votePodium = votePrediction.slice(0, 3);
-  const actualPodium = resultPodium.slice(0, 3);
+  // 3. Incorrect position but on podium bonus (+3 pts)
+  // Only for P1, P2, P3. We only check drivers that were NOT correctly guessed in their exact position.
+  const votePodium = votePrediction.slice(0, 3).filter(id => id !== '');
+  const actualPodium = resultData.slice(0, 3).filter(id => id !== '');
 
-  votePodium.forEach((driver, index) => {
-    if (actualPodium.includes(driver) && votePodium[index] !== actualPodium[index]) {
-      points += 3;
+  votePodium.forEach((vDriver, vIdx) => {
+    // If this driver is on the actual podium...
+    if (actualPodium.includes(vDriver)) {
+      // ...but NOT in the exact position the user guessed
+      if (vDriver !== resultData[vIdx]) {
+        points += 3;
+      }
     }
   });
 

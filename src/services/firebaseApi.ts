@@ -2,7 +2,7 @@ import { auth, db } from '../firebase.ts';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
+  signOut
 } from 'firebase/auth';
 import {
   collection,
@@ -18,52 +18,69 @@ import {
   type DocumentData
 } from 'firebase/firestore';
 
+export interface AppUser {
+  uid: string;
+  email: string | null;
+  username: string;
+  role: 'user' | 'admin';
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
 // Helper to convert Firebase user to our app's user format
-const formatUser = (user: any) => {
+const formatUser = (user: any): AppUser | null => {
   if (!user) return null;
   return {
     uid: user.uid,
     email: user.email,
     username: user.username || '',
-    role: user.role || 'user', // Default role to 'user' if not specified
+    role: user.role || 'user',
   };
 };
 
 // --- Auth Functions ---
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string): Promise<ApiResponse<AppUser>> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Fetch user data from Firestore
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data();
 
-    return { success: true, user: formatUser({ ...user, ...userData }) };
+    const formattedUser = formatUser({ ...user, ...userData });
+    if (!formattedUser) throw new Error('User formatting failed');
+
+    return { success: true, data: formattedUser };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const register = async (email: string, password: string, username: string, role: string = 'user') => {
+export const register = async (email: string, password: string, username: string, role: 'user' | 'admin' = 'user'): Promise<ApiResponse<AppUser>> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Store user data in Firestore, including role and username
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       username: username,
       role: role,
     });
 
-    return { success: true, user: formatUser({ ...user, username, role }) };
+    const formattedUser = formatUser({ ...user, username, role });
+    if (!formattedUser) throw new Error('User formatting failed');
+
+    return { success: true, data: formattedUser };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const logout = async () => {
+export const logout = async (): Promise<ApiResponse<void>> => {
   try {
     await signOut(auth);
     return { success: true };
@@ -73,137 +90,99 @@ export const logout = async () => {
 };
 
 // --- User Management Functions ---
-export const getAllUsers = async () => {
+export const getAllUsers = async (): Promise<ApiResponse<AppUser[]>> => {
   try {
     const usersCol = collection(db, 'users');
     const userSnapshot = await getDocs(usersCol);
-    const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as AppUser[];
     return { success: true, data: userList };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const updateUser = async (uid: string, updates: { email?: string, password?: string, role?: string }) => {
+export const updateUser = async (uid: string, updates: Partial<Omit<AppUser, 'uid'>>): Promise<ApiResponse<void>> => {
   try {
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, updates);
-    return { success: true, message: 'User updated successfully' };
+    return { success: true, message: 'Användare uppdaterad' };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const deleteUser = async (uid: string) => {
+export const deleteUser = async (uid: string): Promise<ApiResponse<void>> => {
   try {
     await deleteDoc(doc(db, 'users', uid));
-    // TODO: Also delete user from Firebase Auth if needed, but this requires admin SDK or callable function
-    return { success: true, message: 'User deleted successfully' };
+    return { success: true, message: 'Användare borttagen' };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
 // --- Vote Functions ---
-export const submitVote = async (userId: string, raceId: string, prediction: string[]) => {
+export const submitVote = async (userId: string, raceId: string, prediction: string[]): Promise<ApiResponse<void>> => {
   try {
     const voteRef = doc(db, 'predictions', `${userId}-${raceId}`);
     await setDoc(voteRef, { userId, raceId, prediction }, { merge: true });
-    return { success: true, message: 'Vote submitted successfully' };
+    return { success: true, message: 'Röst skickad' };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const getVotes = async (userId?: string) => {
+// Alias for admin usage
+export const adminUpdateVote = submitVote;
+
+export interface PredictionData {
+    id: string;
+    userId: string;
+    raceId: string;
+    prediction: string[];
+}
+
+
+export const getVotes = async (userId?: string): Promise<ApiResponse<PredictionData[]>> => {
   try {
     let votesQuery: Query<DocumentData> = collection(db, 'predictions');
     if (userId) {
       votesQuery = query(votesQuery, where('userId', '==', userId));
     }
     const voteSnapshot = await getDocs(votesQuery);
-    const voteList = voteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const voteList = voteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PredictionData[];
     return { success: true, data: voteList };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const adminUpdateVote = async (userId: string, raceId: string, newPrediction: string[]) => {
-  try {
-    const voteRef = doc(db, 'predictions', `${userId}-${raceId}`);
-    await updateDoc(voteRef, { prediction: newPrediction });
-    return { success: true, message: 'Vote updated successfully by admin.' };
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-};
-
 // --- Race Functions ---
-export const getRacesByYear = async (year: number) => {
+export interface RaceData {
+    id: string;
+    name: string;
+    date: string;
+    result: string[] | null;
+    year: number;
+}
+
+export const getRacesByYear = async (year: number): Promise<ApiResponse<RaceData[]>> => {
   try {
     const racesCol = collection(db, 'races');
     const q = query(racesCol, where('year', '==', year));
     const raceSnapshot = await getDocs(q);
-    const raceList = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const raceList = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RaceData[];
     return { success: true, data: raceList };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 };
 
-export const updateRaceResultByYear = async (year: number, raceId: string, newResult: string[]) => {
-  try {
-    // Find the specific race document
-    const racesCol = collection(db, 'races');
-    const q = query(racesCol, where('year', '==', year), where('id', '==', raceId));
-    const raceSnapshot = await getDocs(q);
-
-    if (raceSnapshot.empty) {
-      return { success: false, message: 'Race not found for the specified year.' };
-    }
-
-    const raceDoc = raceSnapshot.docs[0];
-    await updateDoc(raceDoc.ref, { result: newResult });
-    return { success: true, message: 'Race result updated successfully.' };
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-};
-
-export const getRaces = async () => {
-  try {
-    const currentYear = 2026;
-    const racesCol = collection(db, 'races');
-    const q = query(racesCol, where('year', '==', currentYear));
-    const raceSnapshot = await getDocs(q);
-    const raceList = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return { success: true, data: raceList };
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-};
-
-// --- Drivers and Constructors (assuming these are static or managed separately) ---
-// For now, we'll assume these might be loaded once or managed via admin.
-// If they need to be dynamic, similar Firestore functions would be needed.
-export const getDrivers = async () => {
+export const getDrivers = async (): Promise<ApiResponse<{id: string, name: string}[]>> => {
   try {
     const driversCol = collection(db, 'drivers');
     const driverSnapshot = await getDocs(driversCol);
-    const driverList = driverSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const driverList = driverSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as {id: string, name: string}[];
     return { success: true, data: driverList };
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-};
-
-export const getConstructors = async () => {
-  try {
-    const constructorsCol = collection(db, 'constructors');
-    const constructorSnapshot = await getDocs(constructorsCol);
-    const constructorList = constructorSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return { success: true, data: constructorList };
   } catch (error: any) {
     return { success: false, message: error.message };
   }

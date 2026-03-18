@@ -1,31 +1,32 @@
 @import "tailwindcss";
 /* Import Google Fonts - Titillium Web for a sporty look */
-@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&display=swap');
 
 @theme {
-  /* F1 Website Inspired Color Palette (WCAG Contrast Enhanced) */
+  /* F1 Website Inspired Color Palette */
   --color-primary: #E10600; /* F1 Red */
-  --color-secondary: #6B7280; /* Muted gray */
-  --color-accent: #00F0FF; /* A bright cyan for highlights, if needed */
+  --color-primary-dark: #B90500;
+  --color-primary-light: #FF2B25;
+  
+  --color-background-dark: #0B0B0E; /* Deep space black */
+  --color-background-medium: #15151E; /* Classic F1 charcoal */
+  --color-background-light: #252530; /* Lighter charcoal for cards */
+  --color-background-glass: rgba(21, 21, 30, 0.7);
 
-  --color-background-dark: #15151E; /* Very dark background, almost black */
-  --color-background-medium: #1E1E28; /* Slightly lighter for cards/sections */
-  --color-background-light: #2A2A36; /* Lighter gray for borders/dividers */
-
-  --color-text-light: #FFFFFF; /* Pure white for main text */
-  --color-text-muted: #C0C0C0; /* Lightened for better contrast (WCAG) */
-  --color-text-dark: #000000; /* Black text (if ever needed on light backgrounds) */
-
-  /* Existing F1-specific colors (ensure contrast if used for text) */
+  --color-text-white: #FFFFFF;
+  --color-text-light: #E1E1E1;
+  --color-text-muted: #949498;
+  
+  --color-accent-cyan: #00F0FF;
+  
   --color-gold: #FFD700;
   --color-silver: #C0C0C0;
   --color-bronze: #CD7F32;
+  
+  --shadow-f1: 0 10px 30px -10px rgba(225, 6, 0, 0.3);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 
-  /* Grays for components, etc. (aligned with new background/text grays) */
-  --color-gray-900: #15151E; /* Matches background-dark */
-  --color-gray-800: #1E1E28; /* Matches background-medium */
-  --color-gray-700: #2A2A36; /* Matches background-light */
-  --color-gray-600: #4B4B5A; /* Slightly lighter for subtle elements */
+  --radius-f1: 4px; /* Racing look is often sharper than bubbly rounded corners */
 }
 
 @layer base {
@@ -34,30 +35,106 @@
   }
 
   body {
-    @apply bg-background-dark text-text-light font-sans antialiased;
+    @apply bg-background-dark text-text-light font-sans antialiased selection:bg-primary selection:text-white;
     font-family: 'Titillium Web', sans-serif;
-
-    /* F1 Background Image */
+    
+    /* Original background image restored */
     background-image: url('https://images.unsplash.com/photo-1678732057617-3bcaf62af9ce?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     position: relative;
+    z-index: 0;
   }
 
-  /* Overlay for text readability */
-  body::after {
+  /* Overlay for depth and carbon fiber feel */
+  body::before {
     content: '';
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); 
+    background: 
+      radial-gradient(circle at 50% 50%, rgba(11, 11, 14, 0.4) 0%, rgba(11, 11, 14, 0.8) 100%),
+      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm20 20h20v20H20V20z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
     z-index: -1;
   }
 
-  a {
-    @apply text-primary hover:text-primary/80 transition-colors duration-200;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-black uppercase italic tracking-tighter;
+    font-style: italic; /* Racing headers are almost always italicized */
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-background-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-background-light rounded-full border-2 border-background-dark hover:bg-primary transition-colors;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-background-glass backdrop-blur-xl border border-white/5 shadow-glass relative overflow-hidden;
+  }
+
+  /* Technical HUD Corners */
+  .hud-corner {
+    @apply absolute w-2 h-2 border-primary opacity-0 transition-opacity duration-300;
+  }
+  .glass-card:hover .hud-corner {
+    @apply opacity-100;
+  }
+
+  .f1-glow-hover {
+    @apply transition-all duration-500;
+  }
+  .f1-glow-hover:hover {
+    @apply shadow-[0_0_30px_-5px_rgba(225,6,0,0.4)] border-primary/30;
+    transform: perspective(1000px) rotateX(2deg) translateY(-5px);
+  }
+
+  .btn-f1 {
+    @apply relative overflow-hidden px-6 py-2 bg-primary text-white font-black uppercase italic tracking-widest transition-all duration-300 hover:bg-primary-dark active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_rgba(0,0,0,0.3)];
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  }
+
+  .tech-label {
+    @apply font-mono text-[8px] uppercase tracking-[0.2em] text-primary/60;
+  }
+}
+
+/* Staggered entry animation */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-f1-reveal {
+  animation: fade-in-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Animations */
+@keyframes speed-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-speed-line {
+  animation: speed-line 2s infinite linear;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out infinite;
 }

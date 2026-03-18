@@ -1,28 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode, useMemo } from 'react';
 import { db } from '../firebase.ts';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { useAuth } from './AuthContext'; // Import useAuth
-
-interface User {
-  id: string;
-  username: string;
-  role: "user" | "admin";
-}
-
-interface Race {
-  id: string;
-  name: string;
-  date: string;
-  result: string[] | null;
-  year: number;
-}
-
-interface Prediction {
-  id: string;
-  userId: string;
-  raceId: string;
-  prediction: string[];
-}
+import { useAuth } from './AuthContext';
+import type { AppUser, RaceData, PredictionData } from '../services/firebaseApi';
 
 interface Driver {
   id: string;
@@ -41,21 +21,21 @@ interface UserVote {
 }
 
 interface DataContextType {
-  users: User[];
-  races: Race[];
-  predictions: Prediction[];
+  users: AppUser[];
+  races: RaceData[];
+  predictions: PredictionData[];
   drivers: Driver[];
   constructors: Constructor[];
-  userVotes: UserVote[]; // Add userVotes
+  userVotes: UserVote[];
   loading: boolean;
   currentSeason: number;
   setCurrentSeason: (season: number) => void;
-  updateUser: (userId: string, updates: Partial<User>) => Promise<void>;
-  addRace: (race: Omit<Race, 'id'>) => Promise<void>;
-  updateRace: (raceId: string, updates: Partial<Race>) => Promise<void>;
+  updateUser: (userId: string, updates: Partial<Omit<AppUser, 'uid'>>) => Promise<void>;
+  addRace: (race: Omit<RaceData, 'id'>) => Promise<void>;
+  updateRace: (raceId: string, updates: Partial<RaceData>) => Promise<void>;
   deleteRace: (raceId: string) => Promise<void>;
   submitVote: (raceId: string, prediction: string[]) => Promise<void>;
-  updateRaceResult: (raceId: string, result: string[]) => Promise<void>; // Add this line
+  updateRaceResult: (raceId: string, result: string[]) => Promise<void>;
   addDriver: (driver: Omit<Driver, 'id'>) => Promise<void>;
   updateDriver: (driverId: string, updates: Partial<Driver>) => Promise<void>;
   deleteDriver: (driverId: string) => Promise<void>;
@@ -68,10 +48,10 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { currentUser: user } = useAuth(); // Get user from AuthContext
-  const [users, setUsers] = useState<User[]>([]);
-  const [races, setRaces] = useState<Race[]>([]);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const { currentUser: user } = useAuth();
+  const [users, setUsers] = useState<AppUser[]>([]);
+  const [races, setRaces] = useState<RaceData[]>([]);
+  const [predictions, setPredictions] = useState<PredictionData[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [constructors, setConstructors] = useState<Constructor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,13 +68,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           getDocs(collection(db, 'drivers')),
           getDocs(collection(db, 'constructors')),
         ]);
-        setUsers(usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]);
-        setRaces(racesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Race[]);
-        setPredictions(predsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Prediction[]);
+        setUsers(usersSnap.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as AppUser[]);
+        setRaces(racesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RaceData[]);
+        setPredictions(predsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PredictionData[]);
         setDrivers(driversSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Driver[]);
         setConstructors(constructorsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Constructor[]);
       } catch (error) {
-        console.error("DataContext: Error fetching data:", error);
+        console.error("DataContext: Fel vid hämtning av data:", error);
       } finally {
         setLoading(false);
       }
@@ -107,12 +87,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user) return [];
     return predictions
       .filter(p => p.userId === user.uid)
-      .map(p => ({ ...p, raceId: p.raceId }));
+      .map(p => ({ raceId: p.raceId, prediction: p.prediction }));
   }, [predictions, user]);
 
 
   const submitVote = async (raceId: string, prediction: string[]) => {
-    if (!user) throw new Error("User not logged in.");
+    if (!user) throw new Error("Användaren är inte inloggad.");
 
     const existingVote = predictions.find(p => p.userId === user.uid && p.raceId === raceId);
 
@@ -131,19 +111,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Implement other data manipulation functions
-  const updateUser = async (userId: string, updates: Partial<User>) => {
+  const updateUser = async (userId: string, updates: Partial<Omit<AppUser, 'uid'>>) => {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, updates);
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setUsers(prev => prev.map(u => u.uid === userId ? { ...u, ...updates } : u));
   };
 
-  const addRace = async (race: Omit<Race, 'id'>) => {
+  const addRace = async (race: Omit<RaceData, 'id'>) => {
     const docRef = await addDoc(collection(db, 'races'), race);
-    setRaces(prev => [...prev, { ...race, id: docRef.id }]);
+    setRaces(prev => [...prev, { ...race, id: docRef.id } as RaceData]);
   };
 
-  const updateRace = async (raceId: string, updates: Partial<Race>) => {
+  const updateRace = async (raceId: string, updates: Partial<RaceData>) => {
     const raceRef = doc(db, 'races', raceId);
     await updateDoc(raceRef, updates);
     setRaces(prev => prev.map(r => r.id === raceId ? { ...r, ...updates } : r));

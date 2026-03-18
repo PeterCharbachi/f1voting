@@ -20,10 +20,10 @@ export default function Login() {
     setError('');
     try {
       await login(email, password);
-      console.log("Login: Attempting to navigate to /home");
+      console.log("Login: Navigerar till /home");
       navigate('/home');
     } catch (err: any) {
-      setError(err.message || 'Failed to log in. Check email and password.');
+      setError(err.message || 'Kunde inte logga in. Kontrollera e-post och lösenord.');
     }
   };
 
@@ -31,88 +31,88 @@ export default function Login() {
     e.preventDefault();
     setError('');
     if (isRegistering && !username) {
-        setError('Username is required.');
+        setError('Användarnamn krävs.');
         return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Lösenorden matchar inte.');
       return;
     }
     try {
       await register(email, password, username);
-      console.log("Login: Attempting to navigate to /home");
+      console.log("Login: Navigerar till /home");
       navigate('/home');
     } catch (err: any) {
-      setError(err.message || 'Failed to register. Please try again.');
+      setError(err.message || 'Kunde inte registrera. Försök igen.');
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-background-dark"> {/* Ensure full background */}
+    <div className="flex items-center justify-center min-h-screen p-4 bg-background-dark">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-text-light text-3xl font-bold uppercase"> {/* F1-like title */}
-            {isRegistering ? 'Register for F1 Voting' : 'F1 Voting Login'}
+          <CardTitle className="text-center text-text-light text-3xl font-bold uppercase italic tracking-tighter">
+            {isRegistering ? 'Skapa konto' : 'Logga in'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={isRegistering ? handleRegister : handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-muted" htmlFor="email">Email</label> {/* Use text-text-muted */}
+              <label className="block text-sm font-medium text-text-muted" htmlFor="email">E-post</label>
               <Input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Ange din e-post"
                 required
               />
             </div>
             {isRegistering && (
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-muted" htmlFor="username">Username</label>
+                <label className="block text-sm font-medium text-text-muted" htmlFor="username">Användarnamn</label>
                 <Input
                   type="text"
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Choose a username"
+                  placeholder="Välj ett användarnamn"
                   required
                 />
               </div>
             )}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-muted" htmlFor="password">Password</label> {/* Use text-text-muted */}
+              <label className="block text-sm font-medium text-text-muted" htmlFor="password">Lösenord</label>
               <Input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Ange ditt lösenord"
                 required
               />
             </div>
             {isRegistering && (
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-muted" htmlFor="confirmPassword">Confirm Password</label> {/* Use text-text-muted */}
+                <label className="block text-sm font-medium text-text-muted" htmlFor="confirmPassword">Bekräfta lösenord</label>
                 <Input
                   type="password"
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
+                  placeholder="Bekräfta ditt lösenord"
                   required
                 />
               </div>
             )}
-            {error && <p className="text-primary text-center !mt-4">{error}</p>} {/* Use text-primary for errors */}
-            <Button type="submit" className="w-full">
-              {isRegistering ? 'Register' : 'Login'}
+            {error && <p className="text-primary text-center text-sm !mt-4 animate-shake">{error}</p>}
+            <Button type="submit" className="w-full uppercase font-black tracking-widest">
+              {isRegistering ? 'Registrera' : 'Logga in'}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <Button variant="link" onClick={() => setIsRegistering(!isRegistering)}>
-              {isRegistering ? 'Already have an account? Login' : 'Don\'t have an account? Register'}
+          <div className="mt-6 text-center">
+            <Button variant="link" onClick={() => setIsRegistering(!isRegistering)} className="text-text-muted hover:text-primary transition-colors text-xs uppercase tracking-widest">
+              {isRegistering ? 'Har du redan ett konto? Logga in' : 'Saknar du konto? Registrera dig'}
             </Button>
           </div>
         </CardContent>
